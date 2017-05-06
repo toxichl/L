@@ -1,12 +1,11 @@
 import HTMLParser from './html-parser';
 import TextParser from './text-parser';
-import {bind, camelize} from '../util';
+import {bind, camelize, warn} from '../util';
 import RE from './RE';
 import {
     makeAttrsMap,
     addIfAttsInElement,
     getAndRmAttr,
-    warn,
     getModfilerMapByAttrName,
     addProp,
     addAttr,
@@ -51,14 +50,18 @@ export default class HtmlKeeper {
      * @param element
      */
     handleChildElement(element) {
+
         // currentParent records the lastest tag-closed element
         if (this.currentParent && !element.forbidden) {
 
             if (element.elseif || element.else) {
 
-                // Find previous siblings elemnt
+                // find previous siblings elemnt
                 const _prev = findPrevElement(this.currentParent.children)
 
+                console.log(_prev)
+
+                // save
                 if (_prev && _prev.if) {
                     addIfAttsInElement(_prev, {
                         exp: element.elseif,
@@ -66,6 +69,7 @@ export default class HtmlKeeper {
                     })
 
                 } else {
+                    console.log(element)
                     warn(
                         `v-${element.elseif ? ('else-if="' + element.elseif + '"') : 'else'} ` +
                         `used on element <${element.tag}> without corresponding v-if.`
@@ -99,10 +103,13 @@ export default class HtmlKeeper {
             if: null,
             elseif: null,
             else: null,
+            ifConditions: null,
             slotScope: null,
             forbidden: null,
-            ifConditions: null,
-
+            for: null,
+            iterator1: null,
+            iterator2: null,
+            forProcessed: null
         }
 
         // Core Diectives

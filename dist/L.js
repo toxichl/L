@@ -457,12 +457,12 @@ function TextParser(text, delimiters) {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__RE__ = __webpack_require__(2);
-/* harmony export (immutable) */ __webpack_exports__["g"] = getModfilerMapByAttrName;
-/* harmony export (immutable) */ __webpack_exports__["f"] = getAndRmAttr;
-/* harmony export (immutable) */ __webpack_exports__["e"] = makeAttrsMap;
-/* harmony export (immutable) */ __webpack_exports__["h"] = addAttr;
-/* harmony export (immutable) */ __webpack_exports__["i"] = addProp;
-/* harmony export (immutable) */ __webpack_exports__["j"] = addHandler;
+/* harmony export (immutable) */ __webpack_exports__["f"] = getModfilerMapByAttrName;
+/* harmony export (immutable) */ __webpack_exports__["e"] = getAndRmAttr;
+/* harmony export (immutable) */ __webpack_exports__["d"] = makeAttrsMap;
+/* harmony export (immutable) */ __webpack_exports__["g"] = addAttr;
+/* harmony export (immutable) */ __webpack_exports__["h"] = addProp;
+/* harmony export (immutable) */ __webpack_exports__["i"] = addHandler;
 /* harmony export (immutable) */ __webpack_exports__["b"] = findPrevElement;
 /* harmony export (immutable) */ __webpack_exports__["c"] = addIfAttsInElement;
 /* harmony export (immutable) */ __webpack_exports__["a"] = makeFunction;
@@ -2716,21 +2716,26 @@ var HtmlKeeper = function () {
     }, {
         key: 'handleChildElement',
         value: function handleChildElement(element) {
+
             // currentParent records the lastest tag-closed element
             if (this.currentParent && !element.forbidden) {
 
                 if (element.elseif || element.else) {
 
-                    // Find previous siblings elemnt
+                    // find previous siblings elemnt
                     var _prev = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["b" /* findPrevElement */])(this.currentParent.children);
 
+                    console.log(_prev);
+
+                    // save
                     if (_prev && _prev.if) {
                         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["c" /* addIfAttsInElement */])(_prev, {
                             exp: element.elseif,
                             block: element
                         });
                     } else {
-                        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["warn"])('v-' + (element.elseif ? 'else-if="' + element.elseif + '"' : 'else') + ' ' + ('used on element <' + element.tag + '> without corresponding v-if.'));
+                        console.log(element);
+                        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__util__["e" /* warn */])('v-' + (element.elseif ? 'else-if="' + element.elseif + '"' : 'else') + ' ' + ('used on element <' + element.tag + '> without corresponding v-if.'));
                     }
                 } else if (element.slotScope) {// scoped slot
 
@@ -2756,16 +2761,19 @@ var HtmlKeeper = function () {
                 type: 1,
                 tag: tag,
                 attrsList: attrs,
-                attrsMap: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["e" /* makeAttrsMap */])(attrs),
+                attrsMap: __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["d" /* makeAttrsMap */])(attrs),
                 parent: this.currentParent || null,
                 children: [],
                 if: null,
                 elseif: null,
                 else: null,
+                ifConditions: null,
                 slotScope: null,
                 forbidden: null,
-                ifConditions: null
-
+                for: null,
+                iterator1: null,
+                iterator2: null,
+                forProcessed: null
             };
 
             // Core Diectives
@@ -2854,14 +2862,14 @@ var HtmlKeeper = function () {
         value: function directiveFor(el) {
 
             // v-for="(item,index) in items"
-            var exp = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getAndRmAttr */])(el, 'v-for');
+            var exp = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["e" /* getAndRmAttr */])(el, 'v-for');
 
             if (exp) {
 
                 var matchFor = exp.match(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].forAlias);
 
                 if (!matchFor) {
-                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["warn"])('Invalid v-for expression: ' + exp);
+                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__util__["e" /* warn */])('Invalid v-for expression: ' + exp);
                     return;
                 }
 
@@ -2897,7 +2905,7 @@ var HtmlKeeper = function () {
         key: 'directiveIf',
         value: function directiveIf(element) {
 
-            var ifAttrValue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getAndRmAttr */])(element, 'v-if');
+            var ifAttrValue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["e" /* getAndRmAttr */])(element, 'v-if');
 
             if (ifAttrValue) {
 
@@ -2909,11 +2917,11 @@ var HtmlKeeper = function () {
                 });
             } else {
 
-                if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getAndRmAttr */])(element, 'v-else') != null) {
+                if (__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["e" /* getAndRmAttr */])(element, 'v-else') != null) {
                     element.else = true;
                 }
 
-                var elseifAttrValue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getAndRmAttr */])(element, 'v-else-if');
+                var elseifAttrValue = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["e" /* getAndRmAttr */])(element, 'v-else-if');
 
                 if (elseifAttrValue) {
                     element.elseif = elseifAttrValue;
@@ -2950,7 +2958,7 @@ var HtmlKeeper = function () {
 
                     // v-bind:data.sync --> {sync: true}
                     // :src -> null
-                    modifierMap = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["g" /* getModfilerMapByAttrName */])(name);
+                    modifierMap = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getModfilerMapByAttrName */])(name);
 
                     if (modifierMap) {
                         // v-bind:data.sync --> v-bind:data
@@ -2968,7 +2976,7 @@ var HtmlKeeper = function () {
 
                     }
                 } else {
-                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["h" /* addAttr */])(element, name, JSON.stringify(value));
+                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["g" /* addAttr */])(element, name, JSON.stringify(value));
                 }
             }
 
@@ -3010,9 +3018,9 @@ var HtmlKeeper = function () {
             }
 
             if (isProp) {
-                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["i" /* addProp */])(element, name, value);
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["h" /* addProp */])(element, name, value);
             } else {
-                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["h" /* addAttr */])(element, name, value);
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["g" /* addAttr */])(element, name, value);
             }
         }
 
@@ -3028,7 +3036,7 @@ var HtmlKeeper = function () {
         key: 'directiveOn',
         value: function directiveOn(element, name, value, modifierMap) {
             name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].on, '');
-            __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["j" /* addHandler */])(element, name, value, modifierMap);
+            __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["i" /* addHandler */])(element, name, value, modifierMap);
         }
     }]);
 

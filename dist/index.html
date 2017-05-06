@@ -20,7 +20,6 @@
     <h v-for="(item,index) in items">{{ item }}</h>
     <span v-if="ddd">{{ message }}</span>
     <span v-else>{{ 'sb' }}</span>
-    <span prop.sync="ddd" v-bind:data.prop="items">{{ 'sb' }}</span>
 </div>
 
 <script src="./L.js"></script>
@@ -42,6 +41,8 @@
             }
         }
     })
+
+
 
 //    function anonymous() {
 //        with (this) {
