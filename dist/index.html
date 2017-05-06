@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+
+<div id="app">
+    <button @click="switched">123</button>
+    <h v-for="(item,index) in items">{{ item }}</h>
+    <span v-if="ddd">{{ message }}</span>
+    <span v-else>{{ 'sb' }}</span>
+    <span prop.sync="ddd" v-bind:data.prop="items">{{ 'sb' }}</span>
+</div>
+
+<script src="./L.js"></script>
+
+<script>
+    let ins = new L({
+        el : '#app',
+        data: {
+            message : 'hello',
+            items: [1,2,3],
+            ddd: false
+        },
+        methods: {
+            switched: function () {
+                this.items.push(4)
+                this.ddd = !this.ddd
+            }
+        }
+    })
+
+//    function anonymous() {
+//        with (this) {
+//            return _h('div', {attrs: {"id": "app"}, on: {"click": click}}, [" ", _l((items), function (item, index) {
+//                return _h('div', {}, [_s(item)])
+//            })])
+//        }
+//    }
+
+</script>
+
+</body>
+</html>

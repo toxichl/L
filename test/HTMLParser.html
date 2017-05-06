@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<script src="htmlparser.js"></script>
+<script>
+
+    let htmlString = `\<!--dcddc--\><p id=test>hello <i>world`
+    let result = ''
+
+    HTMLParser(htmlString, {
+        start: function (tag, attrs, unary) {
+            result += '<' + tag
+            attrs.map(attr => {
+                result += ` ${attr.name}="${attr.escaped}"`
+            })
+            result += '>'
+            console.log(unary)
+        },
+        end: function (tag) {
+            result += `</${tag}>`
+        },
+        chars: function (text) {
+            result += text
+        },
+        comment: function (text) {
+            result += "<!--" + text + "-->";
+        }
+    });
+
+    console.log(result)
+</script>
+
+
+</body>
+</html>
