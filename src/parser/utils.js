@@ -10,7 +10,6 @@ export function getModfilerMapByAttrName(name) {
 
     // @click -> null
     // v-bind.sync -> [.sync]
-
     const match = name.match(RE.modefier);
 
     if (match) {

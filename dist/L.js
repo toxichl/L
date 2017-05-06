@@ -478,7 +478,6 @@ function getModfilerMapByAttrName(name) {
 
     // @click -> null
     // v-bind.sync -> [.sync]
-
     var match = name.match(__WEBPACK_IMPORTED_MODULE_1__RE__["a" /* default */].modefier);
 
     if (match) {

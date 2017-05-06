@@ -1,6 +1,6 @@
 {
-  "name": "luc",
-  "version": "1.0.0",
+  "name": "Ljs",
+  "version": "0.0.1",
   "description": "A lightweight framework like vue.js",
   "main": "index.js",
   "scripts": {
