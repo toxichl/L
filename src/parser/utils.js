@@ -128,8 +128,11 @@ export function findPrevElement(children) {
  * @param el
  * @param parent
  */
-export function processIfConditions(el, parent) {
-
+export function addIfAttsInElement(element, ifCondition) {
+    if (!element.ifConditions) {
+        element.ifConditions = [];
+    }
+    element.ifConditions.push(ifCondition);
 }
 
 /**

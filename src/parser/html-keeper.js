@@ -4,7 +4,7 @@ import {bind, camelize} from '../util';
 import RE from './RE';
 import {
     makeAttrsMap,
-    processIfConditions,
+    addIfAttsInElement,
     getAndRmAttr,
     warn,
     getModfilerMapByAttrName,
@@ -39,11 +39,46 @@ export default class HtmlKeeper {
      * Set the first parsed element as root
      * @param element
      */
-    checkoutRoot(element) {
+    checkoutRootElement(element) {
         if (!this.rootElement) {
             this.rootElement = element
         }
         return this;
+    }
+
+    /**
+     * Handle child element under parsing
+     * @param element
+     */
+    handleChildElement(element) {
+        // currentParent records the lastest tag-closed element
+        if (this.currentParent && !element.forbidden) {
+
+            if (element.elseif || element.else) {
+
+                // Find previous siblings elemnt
+                const _prev = findPrevElement(this.currentParent.children)
+
+                if (_prev && _prev.if) {
+                    addIfAttsInElement(_prev, {
+                        exp: element.elseif,
+                        block: element
+                    })
+
+                } else {
+                    warn(
+                        `v-${element.elseif ? ('else-if="' + element.elseif + '"') : 'else'} ` +
+                        `used on element <${element.tag}> without corresponding v-if.`
+                    )
+                }
+
+            } else if (element.slotScope) { // scoped slot
+
+            } else {
+                this.currentParent.children.push(element)
+                element.parent = this.currentParent
+            }
+        }
     }
 
     /**
@@ -60,12 +95,14 @@ export default class HtmlKeeper {
             attrsList: attrs,
             attrsMap: makeAttrsMap(attrs),
             parent: this.currentParent || null,
-            children: []
-            // if
-            // elseif
-            // else
-            // slotScope
-            // forbidden
+            children: [],
+            if: null,
+            elseif: null,
+            else: null,
+            slotScope: null,
+            forbidden: null,
+            ifConditions: null,
+
         }
 
         // Core Diectives
@@ -74,43 +111,11 @@ export default class HtmlKeeper {
                   .directiveKey(element)
                   .directiveAttrs(element)
 
-        this.checkoutRoot(element)
-        
-        // currentParent records the lastest tag-closed element
-        if (this.currentParent && !element.forbidden) {
+        // Handle Root Element & Child Element
+        this.checkoutRootElement(element)
+            .handleChildElement(element)
 
-            if (element.elseif || element.else) {
-
-                const _prev = findPrevElement(this.currentParent.children)
-
-                if (_prev && _prev.if) {
-
-                    if (!_prev.ifConditions) {
-                        _prev.ifConditions = [];
-                    }
-
-                    _prev.ifConditions.push({
-                        exp: element.elseif,
-                        block: element
-                    });
-
-                } else {
-
-                    warn(
-                        `v-${element.elseif ? ('else-if="' + element.elseif + '"') : 'else'} ` +
-                        `used on element <${element.tag}> without corresponding v-if.`
-                    )
-
-                }
-
-            } else if (element.slotScope) { // scoped slot
-
-            } else {
-                this.currentParent.children.push(element)
-                element.parent = this.currentParent
-            }
-        }
-
+        // Change CurrentParent
         if (!unary) {
             this.currentParent = element
             this.stack.push(element)
@@ -133,6 +138,12 @@ export default class HtmlKeeper {
         // pop stack
         this.stack.length -= 1
         this.currentParent = this.stack[this.stack.length - 1]
+
+        // Render finished
+        if(this.stack.length === 0) {
+            delete this.stack
+            delete this.currentParent
+        }
     }
 
     /**
@@ -214,33 +225,29 @@ export default class HtmlKeeper {
      * Process 'v-if'
      * @param el
      */
-    static directiveIf(el) {
+    static directiveIf(element) {
 
-        const ifAttrValue = getAndRmAttr(el, 'v-if')
+        const ifAttrValue = getAndRmAttr(element, 'v-if')
 
         if (ifAttrValue) {
 
-            el.if = ifAttrValue
+            element.if = ifAttrValue
 
-            if (!el.ifConditions) {
-                el.ifConditions = [];
-            }
-
-            el.ifConditions.push({
+            addIfAttsInElement(element, {
                 exp: ifAttrValue,
-                block: el
-            });
+                block: element
+            })
 
         } else {
 
-            if (getAndRmAttr(el, 'v-else') != null) {
-                el.else = true
+            if (getAndRmAttr(element, 'v-else') != null) {
+                element.else = true
             }
 
-            const elseifAttrValue = getAndRmAttr(el, 'v-else-if')
+            const elseifAttrValue = getAndRmAttr(element, 'v-else-if')
 
             if (elseifAttrValue) {
-                el.elseif = elseifAttrValue
+                element.elseif = elseifAttrValue
             }
 
         }
