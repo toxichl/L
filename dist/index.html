@@ -6,11 +6,17 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <style>
+        .vimg{
+            width: 50px;
+        }
+    </style>
 </head>
 <body>
 
 <div id="app">
-    <button @click="switched">123</button>
+    <img :class="imgClass" :src="imgPath" alt="">
+    <button @click="switched">{{ items }}</button>
     <h v-for="(item,index) in items">{{ item }}</h>
     <span v-if="ddd">{{ message }}</span>
     <span v-else>{{ 'sb' }}</span>
@@ -23,9 +29,11 @@
     let ins = new L({
         el : '#app',
         data: {
+            imgClass: 'vimg',
             message : 'hello',
             items: [1,2,3],
-            ddd: false
+            ddd: false,
+            imgPath: 'https://cn.vuejs.org/images/logo.png'
         },
         methods: {
             switched: function () {

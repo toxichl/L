@@ -1,6 +1,6 @@
 import HTMLParser from './html-parser';
 import TextParser from './text-parser';
-import {bind} from '../util';
+import {bind, camelize} from '../util';
 import RE from './RE';
 import {
     makeAttrsMap,
@@ -11,8 +11,7 @@ import {
     addProp,
     addAttr,
     addHandler,
-    findPrevElement,
-    camelize
+    findPrevElement
 } from './utils';
 
 export default class HtmlKeeper {
@@ -37,6 +36,17 @@ export default class HtmlKeeper {
     static parse = HTMLParser
 
     /**
+     * Set the first parsed element as root
+     * @param element
+     */
+    checkoutRoot(element) {
+        if (!this.rootElement) {
+            this.rootElement = element
+        }
+        return this;
+    }
+
+    /**
      * Start-tag hook
      * @param tag
      * @param attrs
@@ -58,15 +68,14 @@ export default class HtmlKeeper {
             // forbidden
         }
 
+        // Core Diectives
         HtmlKeeper.directiveFor(element)
-        HtmlKeeper.directiveIf(element)
-        HtmlKeeper.directiveKey(element)
-        HtmlKeeper.directiveAttrs(element)
+                  .directiveIf(element)
+                  .directiveKey(element)
+                  .directiveAttrs(element)
 
-        if (!this.rootElement) {
-            this.rootElement = element
-        }
-
+        this.checkoutRoot(element)
+        
         // currentParent records the lastest tag-closed element
         if (this.currentParent && !element.forbidden) {
 
@@ -197,6 +206,8 @@ export default class HtmlKeeper {
                 el.alias = alias
             }
         }
+
+        return this;
     }
 
     /**
@@ -233,76 +244,107 @@ export default class HtmlKeeper {
             }
 
         }
+
+        return this;
     }
 
     static directiveKey(el) {
         // TODO key 优化处理
+        return this;
     }
 
-    static directiveAttrs(el) {
+    static directiveAttrs(element) {
 
-        const list = el.attrsList;
+        const attrsList = element.attrsList;
 
-        let name, rawName, value, modifierMap, isProp;
+        let name, rawName, value, modifierMap;
 
-        for (let i = 0, l = list.length; i < l; i++) {
+        for (let i = 0, l = attrsList.length; i < l; i++)                {
 
-            name = rawName = list[i].name
+            name = rawName = attrsList[i].name
 
-            value = list[i].value
+            value = attrsList[i].value
 
             // Start with @ / : /'v-'
             if (RE.directive.test(name)) {
 
-                // v-bind:data.sync -> {sync: true}
+                // v-bind:data.sync --> {sync: true}
+                // :src -> null
                 modifierMap = getModfilerMapByAttrName(name)
 
                 if (modifierMap) {
-                    // v-bind:data.sync -> v-bind:data
+                    // v-bind:data.sync --> v-bind:data
                     name = name.replace(RE.modefier, '')
                 }
 
-                if (RE.bind.test(name)) { // v-bind
+                // 'v-bind' - directive
+                if (RE.bind.test(name)) {
+                    HtmlKeeper.directiveBind(element, name, value, modifierMap);
 
-                    // data
-                    name = name.replace(RE.bind, '')
-
-                    if (modifierMap) {
-
-                        if (modifierMap.prop) {
-                            isProp = true
-                            console.log(name)
-
-                            console.log(camelize)
-
-                            name = camelize(name)
-                            console.log(name)
-                            if (name === 'innerHtml') name = 'innerHTML'
-                        }
-
-                        if (modifierMap.camel) {
-                            name = camelize(name)
-                        }
-                    }
-
-                    if (isProp) {
-                        addProp(el, name, value)
-
-                    } else {
-                        addAttr(el, name, value)
-                    }
-
-                } else if (RE.on.test(name)) { // v-on
-                    name = name.replace(RE.on, '')
-                    addHandler(el, name, value, modifierMap)
+                // 'v-on' - directive
+                } else if (RE.on.test(name)) {
+                    HtmlKeeper.directiveOn(element, name, value, modifierMap);
 
                 } else { // normal directives
 
                 }
+
             } else {
-                addAttr(el, name, JSON.stringify(value))
+                addAttr(element, name, JSON.stringify(value))
             }
+        }
+
+        return this;
+    }
+
+    /**
+     * Handle 'v-bind'
+     * @param element
+     * @param name
+     * @param value
+     * @param modifierMap
+     */
+    static directiveBind(element, name, value, modifierMap) {
+
+        let isProp;
+        // v-bind:data --> data
+        // v-bind:src -> src
+        // :src -> src
+        name = name.replace(RE.bind, '')
+
+        if (modifierMap) {
+
+            // .prop
+            if (modifierMap.prop) {
+                isProp = true
+                name = camelize(name)
+                console.log(name)
+                if (name === 'innerHtml') name = 'innerHTML'
+            }
+
+            // .camel
+            if (modifierMap.camel) {
+                name = camelize(name)
+            }
+        }
+
+        if (isProp) {
+            addProp(element, name, value)
+
+        } else {
+            addAttr(element, name, value)
         }
     }
 
+    /**
+     * Handle 'v-on'
+     * @param element
+     * @param name
+     * @param value
+     * @param modifierMap
+     */
+    static directiveOn(element, name, value, modifierMap) {
+        name = name.replace(RE.on, '')
+        addHandler(element, name, value, modifierMap)
+    }
 }

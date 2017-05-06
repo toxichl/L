@@ -79,8 +79,8 @@
 /* unused harmony export isPureObject */
 /* harmony export (immutable) */ __webpack_exports__["b"] = querySelector;
 /* harmony export (immutable) */ __webpack_exports__["d"] = getOuterHTML;
-/* harmony export (immutable) */ __webpack_exports__["k"] = cacheContainer;
-/* unused harmony export camelize */
+/* harmony export (immutable) */ __webpack_exports__["l"] = cacheContainer;
+/* harmony export (immutable) */ __webpack_exports__["k"] = camelize;
 /* unused harmony export capitalize */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return getTemplateById; });
 /* harmony export (immutable) */ __webpack_exports__["a"] = toString;
@@ -418,7 +418,7 @@ module.exports = {
 var defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g;
 var regexEscapeRE = /[-.*+?^${}()|[\]/\\]/g;
 
-var buildRegex = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__util__["k" /* cacheContainer */])(function (delimiters) {
+var buildRegex = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__util__["l" /* cacheContainer */])(function (delimiters) {
     var open = delimiters[0].replace(regexEscapeRE, '\\$&');
     var close = delimiters[1].replace(regexEscapeRE, '\\$&');
     return new RegExp(open + '((?:.|\\n)+?)' + close, 'g');
@@ -460,9 +460,9 @@ function TextParser(text, delimiters) {
 /* harmony export (immutable) */ __webpack_exports__["f"] = getModfilerMapByAttrName;
 /* harmony export (immutable) */ __webpack_exports__["e"] = getAndRmAttr;
 /* harmony export (immutable) */ __webpack_exports__["b"] = makeAttrsMap;
-/* harmony export (immutable) */ __webpack_exports__["i"] = addAttr;
+/* harmony export (immutable) */ __webpack_exports__["g"] = addAttr;
 /* harmony export (immutable) */ __webpack_exports__["h"] = addProp;
-/* harmony export (immutable) */ __webpack_exports__["j"] = addHandler;
+/* harmony export (immutable) */ __webpack_exports__["i"] = addHandler;
 /* harmony export (immutable) */ __webpack_exports__["c"] = findPrevElement;
 /* unused harmony export processIfConditions */
 /* harmony export (immutable) */ __webpack_exports__["a"] = makeFunction;
@@ -2689,8 +2689,19 @@ var HtmlKeeper = function () {
     }
 
     _createClass(HtmlKeeper, [{
-        key: 'startHandle',
+        key: 'checkoutRoot',
 
+
+        /**
+         * Set the first parsed element as root
+         * @param element
+         */
+        value: function checkoutRoot(element) {
+            if (!this.rootElement) {
+                this.rootElement = element;
+            }
+            return this;
+        }
 
         /**
          * Start-tag hook
@@ -2698,6 +2709,9 @@ var HtmlKeeper = function () {
          * @param attrs
          * @param unary
          */
+
+    }, {
+        key: 'startHandle',
         value: function startHandle(tag, attrs, unary) {
 
             var element = {
@@ -2714,14 +2728,10 @@ var HtmlKeeper = function () {
                 // forbidden
             };
 
-            HtmlKeeper.directiveFor(element);
-            HtmlKeeper.directiveIf(element);
-            HtmlKeeper.directiveKey(element);
-            HtmlKeeper.directiveAttrs(element);
+            // Core Diectives
+            HtmlKeeper.directiveFor(element).directiveIf(element).directiveKey(element).directiveAttrs(element);
 
-            if (!this.rootElement) {
-                this.rootElement = element;
-            }
+            this.checkoutRoot(element);
 
             // currentParent records the lastest tag-closed element
             if (this.currentParent && !element.forbidden) {
@@ -2855,6 +2865,8 @@ var HtmlKeeper = function () {
                     el.alias = alias;
                 }
             }
+
+            return this;
         }
 
         /**
@@ -2892,81 +2904,116 @@ var HtmlKeeper = function () {
                     el.elseif = elseifAttrValue;
                 }
             }
+
+            return this;
         }
     }, {
         key: 'directiveKey',
         value: function directiveKey(el) {
             // TODO key 优化处理
+            return this;
         }
     }, {
         key: 'directiveAttrs',
-        value: function directiveAttrs(el) {
+        value: function directiveAttrs(element) {
 
-            var list = el.attrsList;
+            var attrsList = element.attrsList;
 
             var name = void 0,
                 rawName = void 0,
                 value = void 0,
-                modifierMap = void 0,
-                isProp = void 0;
+                modifierMap = void 0;
 
-            for (var i = 0, l = list.length; i < l; i++) {
+            for (var i = 0, l = attrsList.length; i < l; i++) {
 
-                name = rawName = list[i].name;
+                name = rawName = attrsList[i].name;
 
-                value = list[i].value;
+                value = attrsList[i].value;
 
                 // Start with @ / : /'v-'
                 if (__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].directive.test(name)) {
 
-                    // v-bind:data.sync -> {sync: true}
+                    // v-bind:data.sync --> {sync: true}
+                    // :src -> null
                     modifierMap = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["f" /* getModfilerMapByAttrName */])(name);
 
                     if (modifierMap) {
-                        // v-bind:data.sync -> v-bind:data
+                        // v-bind:data.sync --> v-bind:data
                         name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].modefier, '');
                     }
 
+                    // 'v-bind' - directive
                     if (__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].bind.test(name)) {
-                        // v-bind
+                        HtmlKeeper.directiveBind(element, name, value, modifierMap);
 
-                        // data
-                        name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].bind, '');
-
-                        if (modifierMap) {
-
-                            if (modifierMap.prop) {
-                                isProp = true;
-                                console.log(name);
-
-                                console.log(__WEBPACK_IMPORTED_MODULE_4__utils__["camelize"]);
-
-                                name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["camelize"])(name);
-                                console.log(name);
-                                if (name === 'innerHtml') name = 'innerHTML';
-                            }
-
-                            if (modifierMap.camel) {
-                                name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["camelize"])(name);
-                            }
-                        }
-
-                        if (isProp) {
-                            __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["h" /* addProp */])(el, name, value);
-                        } else {
-                            __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["i" /* addAttr */])(el, name, value);
-                        }
+                        // 'v-on' - directive
                     } else if (__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].on.test(name)) {
-                        // v-on
-                        name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].on, '');
-                        __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["j" /* addHandler */])(el, name, value, modifierMap);
+                        HtmlKeeper.directiveOn(element, name, value, modifierMap);
                     } else {// normal directives
 
                     }
                 } else {
-                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["i" /* addAttr */])(el, name, JSON.stringify(value));
+                    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["g" /* addAttr */])(element, name, JSON.stringify(value));
                 }
             }
+
+            return this;
+        }
+
+        /**
+         * Handle 'v-bind'
+         * @param element
+         * @param name
+         * @param value
+         * @param modifierMap
+         */
+
+    }, {
+        key: 'directiveBind',
+        value: function directiveBind(element, name, value, modifierMap) {
+
+            var isProp = void 0;
+            // v-bind:data --> data
+            // v-bind:src -> src
+            // :src -> src
+            name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].bind, '');
+
+            if (modifierMap) {
+
+                // .prop
+                if (modifierMap.prop) {
+                    isProp = true;
+                    name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__util__["k" /* camelize */])(name);
+                    console.log(name);
+                    if (name === 'innerHtml') name = 'innerHTML';
+                }
+
+                // .camel
+                if (modifierMap.camel) {
+                    name = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__util__["k" /* camelize */])(name);
+                }
+            }
+
+            if (isProp) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["h" /* addProp */])(element, name, value);
+            } else {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["g" /* addAttr */])(element, name, value);
+            }
+        }
+
+        /**
+         * Handle 'v-on'
+         * @param element
+         * @param name
+         * @param value
+         * @param modifierMap
+         */
+
+    }, {
+        key: 'directiveOn',
+        value: function directiveOn(element, name, value, modifierMap) {
+            name = name.replace(__WEBPACK_IMPORTED_MODULE_3__RE__["a" /* default */].on, '');
+            __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["i" /* addHandler */])(element, name, value, modifierMap);
         }
     }]);
 
