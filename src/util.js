@@ -116,7 +116,7 @@ export function cacheContainer(fn) {
 const CAMEL_CASE_RE = /-(\w)/g
 
 /**
- * camelize the given string
+ * Camelize the given string
  * @type {Function}
  */
 export function camelize(str) {

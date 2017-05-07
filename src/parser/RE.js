@@ -19,7 +19,13 @@ const RE = {
 
     functionExp: /^\s*([\w$_]+|\([^)]*?\))\s*=>|^function\s*\(/,
 
-    simplePath: /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/
+    simplePath: /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/,
+
+    mustacheTag: /\{\{((?:.|\n)+?)\}\}/g,
+
+    regexEscape: /[-.*+?^${}()|[\]/\\]/g
+
+
 }
 
 export {RE as default}

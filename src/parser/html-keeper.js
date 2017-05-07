@@ -59,8 +59,6 @@ export default class HtmlKeeper {
                 // find previous siblings elemnt
                 const _prev = findPrevElement(this.currentParent.children)
 
-                console.log(_prev)
-
                 // save
                 if (_prev && _prev.if) {
                     addIfAttsInElement(_prev, {
@@ -68,8 +66,8 @@ export default class HtmlKeeper {
                         block: element
                     })
 
+                // v-else or v-else-if must use with v-if
                 } else {
-                    console.log(element)
                     warn(
                         `v-${element.elseif ? ('else-if="' + element.elseif + '"') : 'else'} ` +
                         `used on element <${element.tag}> without corresponding v-if.`
@@ -101,8 +99,8 @@ export default class HtmlKeeper {
             parent: this.currentParent || null,
             children: [],
             if: null,
-            elseif: null,
             else: null,
+            elseif: null,
             ifConditions: null,
             slotScope: null,
             forbidden: null,
@@ -135,11 +133,11 @@ export default class HtmlKeeper {
      */
     endHandle(tag) {
 
-        const element = this.stack[this.stack.length - 1]
-        const lastNode = element.children[element.children.length - 1]
+        const currentLastElement = this.stack[this.stack.length - 1]
+        const lastNode = currentLastElement.children[currentLastElement.children.length - 1]
 
         if (lastNode && lastNode.type === 3 && lastNode.text === ' ') {
-            element.children.pop()
+            currentLastElement.children.pop()
         }
 
         // pop stack
@@ -159,10 +157,9 @@ export default class HtmlKeeper {
      */
     charsHandle(text) {
         if (!text.trim()) {
-            text = ' '
+            text = ' ';
         }
-
-        let expression = TextParser(text, this.options.delimiters)
+        let expression = TextParser(text, this.options.delimiters);
         if (expression) {
             this.currentParent.children.push({
                 type: 2,

@@ -200,7 +200,7 @@ function cacheContainer(fn) {
 var CAMEL_CASE_RE = /-(\w)/g;
 
 /**
- * camelize the given string
+ * Camelize the given string
  * @type {Function}
  */
 function camelize(str) {
@@ -324,7 +324,12 @@ var RE = {
 
     functionExp: /^\s*([\w$_]+|\([^)]*?\))\s*=>|^function\s*\(/,
 
-    simplePath: /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/
+    simplePath: /^\s*[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\['.*?']|\[".*?"]|\[\d+]|\[[A-Za-z_$][\w$]*])*\s*$/,
+
+    mustacheTag: /\{\{((?:.|\n)+?)\}\}/g,
+
+    regexEscape: /[-.*+?^${}()|[\]/\\]/g
+
 };
 
 
@@ -412,20 +417,28 @@ module.exports = {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__util__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__RE__ = __webpack_require__(2);
 /* harmony export (immutable) */ __webpack_exports__["a"] = TextParser;
 
 
-var defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g;
-var regexEscapeRE = /[-.*+?^${}()|[\]/\\]/g;
 
 var buildRegex = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__util__["l" /* cacheContainer */])(function (delimiters) {
-    var open = delimiters[0].replace(regexEscapeRE, '\\$&');
-    var close = delimiters[1].replace(regexEscapeRE, '\\$&');
+    var open = delimiters[0].replace(__WEBPACK_IMPORTED_MODULE_1__RE__["a" /* default */].regexEscape, '\\$&');
+    var close = delimiters[1].replace(__WEBPACK_IMPORTED_MODULE_1__RE__["a" /* default */].regexEscape, '\\$&');
     return new RegExp(open + '((?:.|\\n)+?)' + close, 'g');
 });
 
+console.log(buildRegex);
+
+/**
+ * Parse ordinary text or mustache text
+ * @param text
+ * @param delimiters
+ * @returns {string}
+ * @constructor
+ */
 function TextParser(text, delimiters) {
-    var tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE;
+    var tagRE = delimiters ? buildRegex(delimiters) : __WEBPACK_IMPORTED_MODULE_1__RE__["a" /* default */].mustacheTag;
     if (!tagRE.test(text)) {
         return;
     }
@@ -2725,16 +2738,15 @@ var HtmlKeeper = function () {
                     // find previous siblings elemnt
                     var _prev = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["b" /* findPrevElement */])(this.currentParent.children);
 
-                    console.log(_prev);
-
                     // save
                     if (_prev && _prev.if) {
                         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__utils__["c" /* addIfAttsInElement */])(_prev, {
                             exp: element.elseif,
                             block: element
                         });
+
+                        // v-else or v-else-if must use with v-if
                     } else {
-                        console.log(element);
                         __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__util__["e" /* warn */])('v-' + (element.elseif ? 'else-if="' + element.elseif + '"' : 'else') + ' ' + ('used on element <' + element.tag + '> without corresponding v-if.'));
                     }
                 } else if (element.slotScope) {// scoped slot
@@ -2765,8 +2777,8 @@ var HtmlKeeper = function () {
                 parent: this.currentParent || null,
                 children: [],
                 if: null,
-                elseif: null,
                 else: null,
+                elseif: null,
                 ifConditions: null,
                 slotScope: null,
                 forbidden: null,
@@ -2798,11 +2810,11 @@ var HtmlKeeper = function () {
         key: 'endHandle',
         value: function endHandle(tag) {
 
-            var element = this.stack[this.stack.length - 1];
-            var lastNode = element.children[element.children.length - 1];
+            var currentLastElement = this.stack[this.stack.length - 1];
+            var lastNode = currentLastElement.children[currentLastElement.children.length - 1];
 
             if (lastNode && lastNode.type === 3 && lastNode.text === ' ') {
-                element.children.pop();
+                currentLastElement.children.pop();
             }
 
             // pop stack
@@ -2827,7 +2839,6 @@ var HtmlKeeper = function () {
             if (!text.trim()) {
                 text = ' ';
             }
-
             var expression = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__text_parser__["a" /* default */])(text, this.options.delimiters);
             if (expression) {
                 this.currentParent.children.push({

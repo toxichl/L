@@ -1,16 +1,24 @@
-import { cacheContainer } from '../util'
+import { cacheContainer } from '../util';
+import RE from './RE';
 
-const defaultTagRE = /\{\{((?:.|\n)+?)\}\}/g
-const regexEscapeRE = /[-.*+?^${}()|[\]/\\]/g
 
 const buildRegex = cacheContainer(delimiters => {
-    const open = delimiters[0].replace(regexEscapeRE, '\\$&')
-    const close = delimiters[1].replace(regexEscapeRE, '\\$&')
-    return new RegExp(open + '((?:.|\\n)+?)' + close, 'g')
+    const open = delimiters[0].replace(RE.regexEscape, '\\$&');
+    const close = delimiters[1].replace(RE.regexEscape, '\\$&');
+    return new RegExp(open + '((?:.|\\n)+?)' + close, 'g');
 })
 
+console.log(buildRegex)
+
+/**
+ * Parse ordinary text or mustache text
+ * @param text
+ * @param delimiters
+ * @returns {string}
+ * @constructor
+ */
 export default function TextParser(text, delimiters) {
-    const tagRE = delimiters ? buildRegex(delimiters) : defaultTagRE
+    const tagRE = delimiters ? buildRegex(delimiters) : RE.mustacheTag;
     if (!tagRE.test(text)) {
         return
     }
